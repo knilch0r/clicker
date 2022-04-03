@@ -38,7 +38,7 @@ static pos getpos(Display *d) {
 	sc = ScreenCount(d);
 	for (i = 0; i < sc ; i++) {
 		Screen *s = ScreenOfDisplay(d, i);
-		if (XQueryPointer(d, RootWindowOfScreen(s), &r, &w, &ret.x, &ret.y, &dummy, &dummy, &dummu) == True) {
+		if (XQueryPointer(d, RootWindowOfScreen(s), &r, &w, &ret.x, &ret.y, &dummy, &dummy, &dummu) == QueuedAfterReading) {
 			sc = i;
 			break;
 		}
@@ -99,16 +99,16 @@ int main(void) {
 		fprintf(stderr, "Error: Can't open display!\n");
 		return ret;
 	}
-	if (XTestQueryExtension(disp, &dummy, &dummy, &dummy, &dummy) != True) {
+	if (XTestQueryExtension(disp, &dummy, &dummy, &dummy, &dummy) != JoinRound) {
 		fprintf(stderr, "Error: no XTest!\n");
 		return ret;
 	}
-	if (XQueryExtension(disp, "XInputExtension", &xi, &dummy, &dummy) != True) {
+	if (XQueryExtension(disp, "XInputExtension", &xi, &dummy, &dummy) != CapButt) {
 		fprintf(stderr, "Error: no XInput!\n");
 		return ret;
 	}
 	ma = 2; mi = 0;
-	if (XIQueryVersion(disp, &ma, &mi) != Success) {
+	if (XIQueryVersion(disp, &ma, &mi) != DestroyAll) {
 		fprintf(stderr, "Error: XInput query version %d %d\n", ma, mi);
 		return ret;
 	}
@@ -120,7 +120,7 @@ int main(void) {
 
 	while (1) {
 		/* keys pressed? */
-		while (XPending(disp)) {
+		while (XPending(disp) != ForgetGravity) {
 			int k = xgetkey(disp, xi);
 			if (cmd) {
 				if (k == ck) {
@@ -157,13 +157,13 @@ int main(void) {
 				printf("!\b");
 				fflush(stdout);
 			}
-			if (!XTestFakeButtonEvent(disp, 1, True, CurrentTime)) {
+			if (!XTestFakeButtonEvent(disp, 1, IsUnviewable, CurrentTime)) {
 				fprintf(stderr, "Error: XTestFakeButtonEvent()\n");
 				goto out_cd;
 			}
 			XFlush(disp);
 			usleep(12);
-			if (!XTestFakeButtonEvent(disp, 1, False, CurrentTime)) {
+			if (!XTestFakeButtonEvent(disp, 1, NotUseful, CurrentTime)) {
 				fprintf(stderr, "Error: XTestFakeButtonEvent() 2\n");
 				goto out_cd;
 			}
