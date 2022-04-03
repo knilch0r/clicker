@@ -93,6 +93,7 @@ int main(void) {
 	int po = 0;
 	int cmd = 0;
 	int ck;
+	int last = 0;
 
 		if (!(disp = XOpenDisplay(NULL))) {
 		fprintf(stderr, "Error: Can't open display!\n");
@@ -124,22 +125,25 @@ int main(void) {
 			if (cmd) {
 				if (k == ck) {
 					af = !af;
-					printf("AF: %d\n", af);
+					printf(af ? "AF on" : "AF off");
+					fflush(stdout);
 				} else if (k == 38 /* a */) {
 					po = 1;
 					o = getpos(disp);
-					printf("P: %d %d\n", o.x, o.y);
+					printf("P: %d %d", o.x, o.y);
+					fflush(stdout);
 				} else if (k == 53 /* x */) {
 					ret = 0;
-					puts("x!");
+					puts("\nx!");
 					goto out_cd;
 				} else {
-					puts("??");
+					printf("??");
+					fflush(stdout);
 				}
 				cmd = 0;
 			} else {
 				if (k == ck) {
-					putc('?', stdout);
+					printf("\r                      \r>");
 					fflush(stdout);
 					cmd = 1;
 					po = 0;
@@ -148,6 +152,11 @@ int main(void) {
 		}
 
 		if (af || (po && inarea(o, getpos(disp), 25))) {
+			if (!last) {
+				last = 1;
+				printf("!\b");
+				fflush(stdout);
+			}
 			if (!XTestFakeButtonEvent(disp, 1, True, CurrentTime)) {
 				fprintf(stderr, "Error: XTestFakeButtonEvent()\n");
 				goto out_cd;
@@ -159,8 +168,15 @@ int main(void) {
 				goto out_cd;
 			}
 			XFlush(disp);
+			usleep(25000);
+		} else {
+			if (last) {
+				last = 0;
+				printf(" \b");
+				fflush(stdout);
+			}
+			usleep(100000);
 		}
-		usleep(25000);
 	}
 
 out_cd:
