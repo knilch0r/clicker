@@ -130,7 +130,9 @@ int main(void) {
 					o = getpos(disp);
 					printf("P: %d %d\n", o.x, o.y);
 				} else if (k == 53 /* x */) {
-					break;
+					ret = 0;
+					puts("x!");
+					goto out_cd;
 				} else {
 					puts("??");
 				}
@@ -161,7 +163,6 @@ int main(void) {
 		usleep(25000);
 	}
 
-	ret = 0;
 out_cd:
 	XCloseDisplay(disp);
 	return ret;
