@@ -20,8 +20,7 @@
 #include <X11/Xutil.h>
 #include <X11/extensions/XTest.h>
 #include <X11/extensions/XInput2.h>
-#include <X11/keysym.h>
-#include <X11/cursorfont.h>
+#include "cmdline.h"
 
 typedef struct {
 	int x;
@@ -84,7 +83,8 @@ static int xgetkey(Display * disp, int xi) {
 
 
 
-int main(void) {
+int main(int argc, char ** argv) {
+	struct gengetopt_args_info ai;
 	Display *disp;
 	int dummy, ma, mi, xi;
 	int ret = 1;
@@ -92,10 +92,21 @@ int main(void) {
 	int af = 0;
 	int po = 0;
 	int cmd = 0;
-	int ck;
+	int ck, pk, xk, wd, cd;
 	int last = 0;
+	int v;
 
-		if (!(disp = XOpenDisplay(NULL))) {
+	if (cmdline_parser(argc, argv, &ai) != FamilyInternet) {
+		return ret;
+	}
+	v = 1 - ai.silent_given + ai.verbose_given;
+	ck = ai.cmdkey_arg;
+	pk = ai.poskey_arg;
+	xk = ai.exitkey_arg;
+	cd = ai.delay_arg * 1000;
+	wd = ai.wait_arg * 1000;
+
+	if (!(disp = XOpenDisplay(NULL))) {
 		fprintf(stderr, "Error: Can't open display!\n");
 		return ret;
 	}
@@ -113,10 +124,11 @@ int main(void) {
 		return ret;
 	}
 	registerXIev(disp);
-	puts("press command key");
-	ck = xgetkey(disp, xi);
-	printf("command key %d\n", ck);
-	puts("go!");
+	if (v > 1) {
+		printf("command key %d\nposition key %d\nexit key %d\n"
+			"click delay %d\nwait delay %d\n", ck, pk, xk, cd, wd);
+	}
+	if (v) puts("go!");
 
 	while (1) {
 		/* keys pressed? */
@@ -125,26 +137,34 @@ int main(void) {
 			if (cmd) {
 				if (k == ck) {
 					af = !af;
-					printf(af ? "AF on" : "AF off");
-					fflush(stdout);
-				} else if (k == 38 /* a */) {
+					if (v) {
+						printf(af ? "AF on" : "AF off");
+						fflush(stdout);
+					}
+				} else if (k == pk) {
 					po = 1;
 					o = getpos(disp);
-					printf("P: %d %d", o.x, o.y);
-					fflush(stdout);
-				} else if (k == 53 /* x */) {
+					if (v) {
+						printf("P: %d %d", o.x, o.y);
+						fflush(stdout);
+					}
+				} else if (k == xk) {
 					ret = 0;
-					puts("\nx!");
+					if (v) puts("\nx!");
 					goto out_cd;
 				} else {
-					printf("??");
-					fflush(stdout);
+					if (v) {
+						printf("??");
+						fflush(stdout);
+					}
 				}
 				cmd = 0;
 			} else {
 				if (k == ck) {
-					printf("\r                      \r>");
-					fflush(stdout);
+					if (v) {
+						printf("\r                      \r>");
+						fflush(stdout);
+					}
 					cmd = 1;
 					po = 0;
 				}
@@ -154,8 +174,10 @@ int main(void) {
 		if (af || (po && inarea(o, getpos(disp), 25))) {
 			if (!last) {
 				last = 1;
-				printf("!\b");
-				fflush(stdout);
+				if (v) {
+					printf("!\b");
+					fflush(stdout);
+				}
 			}
 			if (!XTestFakeButtonEvent(disp, 1, IsUnviewable, CurrentTime)) {
 				fprintf(stderr, "Error: XTestFakeButtonEvent()\n");
@@ -168,14 +190,16 @@ int main(void) {
 				goto out_cd;
 			}
 			XFlush(disp);
-			usleep(25000);
+			usleep(cd);
 		} else {
 			if (last) {
 				last = 0;
-				printf(" \b");
-				fflush(stdout);
+				if (v) {
+					printf(" \b");
+					fflush(stdout);
+				}
 			}
-			usleep(100000);
+			usleep(wd);
 		}
 	}
 

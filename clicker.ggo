@@ -1,0 +1,14 @@
+package "clicker"
+version "0xdeadbeef"
+purpose "click, a lot."
+args "--default-optional"
+option "cmdkey" c "key code for command key" int default="133"
+option "poskey" p "key code for position dependent clicking" int default="38"
+option "exitkey" x "key code for exiting" int default="53" hidden
+option "verbose" v "be verbose"
+option "silent" n "be silent"
+option "delay" d "delay in ms between clicks" int default="25" hidden
+option "wait" w "delay in ms when waiting" int default="100" hidden
+option "enable-af" A "enable autofire" flag on hidden
+option "enable-pos" P "enable position dependent clicking" flag on hidden
+
