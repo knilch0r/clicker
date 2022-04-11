@@ -92,7 +92,7 @@ int main(int argc, char ** argv) {
 	int af = 0;
 	int po = 0;
 	int cmd = 0;
-	int ck, pk, xk, wd, cd;
+	int ck, pk, xk, wd, cd, afen, poen;
 	int last = 0;
 	int v;
 
@@ -105,6 +105,8 @@ int main(int argc, char ** argv) {
 	xk = ai.exitkey_arg;
 	cd = ai.delay_arg * 1000;
 	wd = ai.wait_arg * 1000;
+	afen = ai.autofire_flag;
+	poen = ai.position_flag;
 
 	if (!(disp = XOpenDisplay(NULL))) {
 		fprintf(stderr, "Error: Can't open display!\n");
@@ -126,7 +128,10 @@ int main(int argc, char ** argv) {
 	registerXIev(disp);
 	if (v > 1) {
 		printf("command key %d\nposition key %d\nexit key %d\n"
-			"click delay %d\nwait delay %d\n", ck, pk, xk, cd, wd);
+			"click delay %d\nwait delay %d\nAF %s pos %s\n",
+			ck, pk, xk, cd, wd,
+			"disabled\0enabled"+afen*sizeof("disabled"),
+			"disabled\0enabled"+poen*sizeof("disabled"));
 	}
 	if (v) puts("go!");
 
@@ -136,21 +141,21 @@ int main(int argc, char ** argv) {
 			int k = xgetkey(disp, xi);
 			if (cmd) {
 				if (k == ck) {
-					af = !af;
+					if (afen) af = !af;
 					if (v) {
-						printf(af ? "AF on" : "AF off");
+						printf(afen ? af ? "AF on" : "AF off" : "AF disabled");
 						fflush(stdout);
 					}
 				} else if (k == pk) {
-					po = 1;
+					if (poen) po = 1;
 					o = getpos(disp);
 					if (v) {
-						printf("P: %d %d", o.x, o.y);
+						printf(poen ? "P: %d %d" : "P disabled", o.x, o.y);
 						fflush(stdout);
 					}
 				} else if (k == xk) {
 					ret = 0;
-					if (v) puts("\nx!");
+					if (v) puts("x!\ndone.");
 					goto out_cd;
 				} else {
 					if (v) {
